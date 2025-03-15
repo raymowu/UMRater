@@ -1,5 +1,9 @@
 import os
+<<<<<<< Updated upstream
 from dotenv import load_dotenv  
+=======
+from dotenv import load_dotenv
+>>>>>>> Stashed changes
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -10,6 +14,7 @@ from enum import Enum
 CHARACTERS_URL = "https://api.jikan.moe/v4/characters"
 ANIMES_URL = "https://api.jikan.moe/v4/anime"
 
+<<<<<<< Updated upstream
 class Rating(Enum):
     Z = "z"
     A = "a"
@@ -18,6 +23,8 @@ class Rating(Enum):
     D = "d"
     F = "f"
 
+=======
+>>>>>>> Stashed changes
 class Client(commands.Bot):
     async def on_ready(self):
         print(f'Logged on as {self.user}')
