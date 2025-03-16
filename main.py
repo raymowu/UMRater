@@ -23,10 +23,10 @@ ANIMES_URL = "https://api.jikan.moe/v4/anime"
 
 class Rating(Enum):
     Z = 10
-    S = 9
-    A = 8
-    B = 7
-    C = 5
+    S = 8
+    A = 7
+    B = 5
+    C = 4
     D = 1
     F = 0
 
@@ -75,6 +75,17 @@ def construct_tiers_indexes(user_ratings):
         i += 1
     return tiers_indexes
 
+def construct_tiers_indexes_server(server_ratings):
+    if len(server_ratings) == 1:
+        return [1]
+    tiers_indexes = [1]
+    i = 1
+    while i < len(server_ratings):
+        if server_ratings[i]['average_rating'] < server_ratings[i - 1]['average_rating']:
+            tiers_indexes.append(i + 1)
+        i += 1
+    return tiers_indexes
+
 def get_tier_image_url(tier):
     match tier:
         case 10:
@@ -83,9 +94,9 @@ def get_tier_image_url(tier):
             return 'https://i.imgur.com/edc4xFQ.png'
         case 8:
             return 'https://i.imgur.com/GqABw1t.png'
-        case 7:
+        case 6, 7:
             return 'https://i.imgur.com/hQ54qRQ.png'
-        case 5:
+        case 2, 3, 4, 5:
             return 'https://i.imgur.com/s1fFhWV.png'
         case 1:
             return 'https://i.imgur.com/UD4mhsm.png'
@@ -100,9 +111,9 @@ def get_tier_color(tier):
             return 0xf74044
         case 8:
             return 0xf3b755
-        case 7:
+        case 6, 7:
             return 0xf3db5e
-        case 5:
+        case 2, 3, 4, 5:
             return 0xc8f361
         case 1:
             return 0xc9ea7b
@@ -190,16 +201,10 @@ class View(discord.ui.View):
         ]
     )
     async def select_callback(self, select, interaction):
-        # for guild in client.guilds:
-        #     for member in guild.members:
-        #         print(f"asdf: {member.id}")
-        # print(select.guild_id)
-        # print(select.user.name)
-        # print(self.mal_id)
-        # print(interaction.values[0])
         if (rating_db.count_documents({"user_id": select.user.id, "mal_id": self.mal_id}) > 0):
             rating_db.find_one_and_update({
                 "user_id": select.user.id, 
+                "server_id": select.guild.id,
                 "username": select.user.name, 
                 "mal_id": self.mal_id}, 
                 {'$set' : {"rating": int(interaction.values[0])}})
@@ -207,6 +212,7 @@ class View(discord.ui.View):
         else:
             rating_db.insert_one({
                 "user_id": select.user.id, 
+                "server_id": select.guild.id,
                 "username": select.user.name, 
                 "mal_id": self.mal_id, 
                 "rating": int(interaction.values[0])
@@ -231,14 +237,12 @@ async def add_waifu_rating(interaction: discord.Interaction, name: str):
 
 @client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list", guild=GUILD_ID)
 async def get_user_waifu_ratings(interaction: discord.Interaction, username: str):
-    interaction.response.defer()
+    # await interaction.response.defer()
     user_ratings = list(rating_db.find({"username": username}).sort({"rating": -1}))
     if (len(user_ratings) == 0):
         await interaction.response.send_message("This user has no waifu ratings :(")
         return
-    # calculate tiers index pages
     tiers_indexes = construct_tiers_indexes(user_ratings)
-    print(tiers_indexes)
     async def get_page(page: int):
         index = page - 1
         character = get_character_by_id(user_ratings[index]['mal_id'])
@@ -249,7 +253,50 @@ async def get_user_waifu_ratings(interaction: discord.Interaction, username: str
         emb.add_field(name=character['name'], value=character['name_kanji'])
         n = Pagination.compute_total_pages(len(user_ratings), 1)
         return emb, n
-    asyncio.sleep(delay=0)
+    # asyncio.sleep(delay=0)
+    await Pagination(interaction, tiers_indexes, get_page).navegate()
+    # await interaction.followup.send("test", ephemeral=True)
+
+@client.tree.command(name="get_server_waifu_ratings", description="Show a server's collective waifu tier list", guild=GUILD_ID)
+async def get_server_waifu_ratings(interaction: discord.Interaction):
+    # await interaction.response.defer()
+    server_id = interaction.guild.id
+    servername = interaction.guild.name
+    server_ratings = list(rating_db.aggregate([
+        {"$match": {"server_id": server_id}},
+        {"$group": {
+            "_id": "$mal_id",
+            "count": {"$count": {}},
+            "raters": {"$addToSet": "$username"},
+            "average_rating": {"$avg": "$rating"}
+            }
+        },
+        {"$project": {
+            "mal_id": "$_id",
+            "_id": 0,
+            "raters": 1,
+            "average_rating": 1
+        }},
+         {"$sort": {"average_rating": -1}}
+    ]))
+    print(server_ratings)
+    if (len(server_ratings) == 0):
+        await interaction.response.send_message("This server has no waifu ratings :(")
+        return
+    tiers_indexes = construct_tiers_indexes_server(server_ratings)
+    async def get_page(page: int):
+        index = page - 1
+        character = get_character_by_id(server_ratings[index]['mal_id'])
+        emb = discord.Embed(title=get_characters_anime(character['mal_id']), url = character['url'], color = get_tier_color(round(server_ratings[index]['average_rating'])))
+        emb.set_author(name=f"{servername}'s Waifu Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
+        emb.set_thumbnail(url=get_tier_image_url(round(server_ratings[index]['average_rating'])))
+        emb.set_image(url=character['images']['jpg']['image_url'])
+        emb.add_field(name=character['name'], value=character['name_kanji'])
+        emb.add_field(name="Server Rating", value=f"{server_ratings[index]['average_rating']}/10", inline=False)
+        emb.set_footer(text=f"Raters ({len(server_ratings[index]['raters'])}): {", ".join(server_ratings[index]['raters'])}")
+        n = Pagination.compute_total_pages(len(server_ratings), 1)
+        return emb, n
+    # # asyncio.sleep(delay=0)
     await Pagination(interaction, tiers_indexes, get_page).navegate()
     # await interaction.followup.send("test", ephemeral=True)
 
