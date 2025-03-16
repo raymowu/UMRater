@@ -6,6 +6,7 @@ import requests
 from enum import Enum
 from pymongo import MongoClient
 from pagination import Pagination
+import asyncio
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -46,6 +47,34 @@ client = Client(command_prefix="!", intents=intents)
 
 GUILD_ID = discord.Object(id=368504766889984000)
 
+def find_first_index(data, condition):
+    """
+    Finds the index of the first element in the list that satisfies the condition.
+
+    Args:
+        data: The list to search.
+        condition: A function that takes an element as input and returns True if the condition is met, False otherwise.
+
+    Returns:
+        The index of the first element that satisfies the condition, or -1 if no such element is found.
+    """
+    for index, element in enumerate(data):
+        if condition(element):
+            return index
+    return -1
+
+# returns of array of each 1-indexed page of each tier
+def construct_tiers_indexes(user_ratings):
+    if len(user_ratings) == 1:
+        return [1]
+    tiers_indexes = [1]
+    i = 1
+    while i < len(user_ratings):
+        if user_ratings[i]['rating'] < user_ratings[i - 1]['rating']:
+            tiers_indexes.append(i + 1)
+        i += 1
+    return tiers_indexes
+
 def get_tier_image_url(tier):
     match tier:
         case 10:
@@ -62,6 +91,23 @@ def get_tier_image_url(tier):
             return 'https://i.imgur.com/UD4mhsm.png'
         case 0:
             return 'https://i.imgur.com/YKZhSks.png'
+
+def get_tier_color(tier):
+    match tier:
+        case 10:
+            return 0x97dcf7
+        case 9:
+            return 0xf74044
+        case 8:
+            return 0xf3b755
+        case 7:
+            return 0xf3db5e
+        case 5:
+            return 0xc8f361
+        case 1:
+            return 0xc9ea7b
+        case 0:
+            return 0x85877f
 
 def get_characters_anime(id):
     try:
@@ -185,28 +231,33 @@ async def add_waifu_rating(interaction: discord.Interaction, name: str):
 
 @client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list", guild=GUILD_ID)
 async def get_user_waifu_ratings(interaction: discord.Interaction, username: str):
+    interaction.response.defer()
     user_ratings = list(rating_db.find({"username": username}).sort({"rating": -1}))
     if (len(user_ratings) == 0):
         await interaction.response.send_message("This user has no waifu ratings :(")
         return
+    # calculate tiers index pages
+    tiers_indexes = construct_tiers_indexes(user_ratings)
+    print(tiers_indexes)
     async def get_page(page: int):
         index = page - 1
         character = get_character_by_id(user_ratings[index]['mal_id'])
-        emb = discord.Embed(title=get_characters_anime(character['mal_id']), url = character['url'], color = discord.Colour.blue())
+        emb = discord.Embed(title=get_characters_anime(character['mal_id']), url = character['url'], color = get_tier_color(user_ratings[index]['rating']))
         emb.set_author(name=f"{username}'s Waifu Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
         emb.set_thumbnail(url=get_tier_image_url(user_ratings[index]['rating']))
         emb.set_image(url=character['images']['jpg']['image_url'])
         emb.add_field(name=character['name'], value=character['name_kanji'])
         n = Pagination.compute_total_pages(len(user_ratings), 1)
         return emb, n
-    await Pagination(interaction, get_page).navegate()
+    asyncio.sleep(delay=0)
+    await Pagination(interaction, tiers_indexes, get_page).navegate()
+    # await interaction.followup.send("test", ephemeral=True)
 
 
 @client.tree.command(name = "disconnect", description = "Close connection to the database and disconnect bot")
 async def disconnect(interaction: discord.Interaction):
     mongodb_client.close()
     await interaction.response.send_message("Closed the connection to the database! Disconecting from Discord...")
-    # TODO: Make sure bellow is proper way to exit discord and python script
     await client.close()
     quit()
 
