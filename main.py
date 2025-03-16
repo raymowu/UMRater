@@ -35,7 +35,7 @@ class Client(commands.Bot):
         print(f'Logged on Discord as {self.user}!')
         try:
             guild = discord.Object(id=368504766889984000)   # test server
-            synced = await self.tree.sync(guild=guild)
+            synced = await self.tree.sync()     # guild=guild
             print(f'Synced {len(synced)} commands to guild {guild.id}')
         except Exception as e:
             print(f'Error syncing commands: {e}')
@@ -45,7 +45,7 @@ intents.message_content = True
 intents.members = True
 client = Client(command_prefix="!", intents=intents)
 
-GUILD_ID = discord.Object(id=368504766889984000)
+# GUILD_ID = discord.Object(id=368504766889984000)
 
 def find_first_index(data, condition):
     """
@@ -219,7 +219,7 @@ class View(discord.ui.View):
                 })
             await select.response.send_message("Rating logged!")
 
-@client.tree.command(name="add_waifu_rating", description="Add a rating for a waifu (IF WRONG WAIFU, PUT FULL WAIFU NAME)", guild=GUILD_ID)
+@client.tree.command(name="add_waifu_rating", description="Add a rating for a waifu (IF WRONG WAIFU, PUT FULL WAIFU NAME)")
 async def add_waifu_rating(interaction: discord.Interaction, name: str):
     char = get_character_by_name(name)   # first result of search
     if len(char) == 0:
@@ -235,7 +235,7 @@ async def add_waifu_rating(interaction: discord.Interaction, name: str):
     embed.add_field(name="Kanji", value=character['name_kanji'])
     await interaction.response.send_message(embed=embed, view=view)
 
-@client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list", guild=GUILD_ID)
+@client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list")
 async def get_user_waifu_ratings(interaction: discord.Interaction, username: str):
     # await interaction.response.defer()
     user_ratings = list(rating_db.find({"username": username}).sort({"rating": -1}))
@@ -257,7 +257,7 @@ async def get_user_waifu_ratings(interaction: discord.Interaction, username: str
     await Pagination(interaction, tiers_indexes, get_page).navegate()
     # await interaction.followup.send("test", ephemeral=True)
 
-@client.tree.command(name="get_server_waifu_ratings", description="Show a server's collective waifu tier list", guild=GUILD_ID)
+@client.tree.command(name="get_server_waifu_ratings", description="Show a server's collective waifu tier list")
 async def get_server_waifu_ratings(interaction: discord.Interaction):
     # await interaction.response.defer()
     server_id = interaction.guild.id
