@@ -21,15 +21,6 @@ print('Connected to MongoDB database!')
 CHARACTERS_URL = "https://api.jikan.moe/v4/characters"
 ANIMES_URL = "https://api.jikan.moe/v4/anime"
 
-class Rating(Enum):
-    Z = 10
-    S = 8
-    A = 7
-    B = 5
-    C = 4
-    D = 1
-    F = 0
-
 class Client(commands.Bot):
     async def on_ready(self):
         print(f'Logged on Discord as {self.user}!')
@@ -166,37 +157,37 @@ class View(discord.ui.View):
             discord.SelectOption(
                 label="💎 Z Tier",
                 description="These are the waifus that live rent-free in your heart forever. ",
-                value = Rating.Z
+                value = "10"
             ),
             discord.SelectOption(
                 label="🥇 S Tier",
                 description="These are the ultimate queens. They’re perfect in every way.",
-                value = Rating.S
+                value = "8"
             ),
             discord.SelectOption(
                 label="🥇 A Tier",
                 description="Exceptional and lovable, just a hair’s breadth from perfection.",
-                value = Rating.A
+                value = "7"
             ),
             discord.SelectOption(
                 label="🥈 B Tier",
                 description="Strong contenders. Cute, fun, lovable, maybe even a little underrated.",
-                value = Rating.B
+                value = "5"
             ),
             discord.SelectOption(
                 label="🥉 C Tier",
                 description="They’re… okay. Maybe you see the appeal, maybe not.",
-                value = Rating.C
+                value = "4"
             ),
             discord.SelectOption(
                 label="🪑 D Tier",
                 description="These are the waifus that make you squint and ask, “Really?”",
-                value = Rating.D
+                value = "1"
             ),
             discord.SelectOption(
                 label="🗑️ F Tier",
                 description="Nope. Hard pass. Absolutely not waifu material — not even ironically.",
-                value = Rating.F
+                value = 0
             )
         ]
     )
@@ -233,7 +224,7 @@ async def add_waifu_rating(interaction: discord.Interaction, name: str):
     embed.set_thumbnail(url=character['images']['jpg']['image_url'])
     embed.add_field(name="Anime", value=get_characters_anime(character['mal_id']))
     embed.add_field(name="Kanji", value=character['name_kanji'])
-    await interaction.response.send_message(embed=embed, view=view)
+    await interaction.response.send_message(embed=embed, view=view) 
 
 @client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list")
 async def get_user_waifu_ratings(interaction: discord.Interaction, username: str):
