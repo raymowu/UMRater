@@ -27,7 +27,7 @@ class Client(commands.Bot):
         try:
             guild = discord.Object(id=368504766889984000)   # test server
             synced = await self.tree.sync()     # guild=guild
-            print(f'Synced {len(synced)} commands to guild {guild.id}')
+            # print(f'Synced {len(synced)} commands to guild {guild.id}')
         except Exception as e:
             print(f'Error syncing commands: {e}')
 
@@ -224,7 +224,7 @@ async def add_waifu_rating(interaction: discord.Interaction, name: str):
     embed.set_thumbnail(url=character['images']['jpg']['image_url'])
     embed.add_field(name="Anime", value=get_characters_anime(character['mal_id']))
     embed.add_field(name="Kanji", value=character['name_kanji'])
-    await interaction.response.send_message(embed=embed, view=view) 
+    await interaction.response.send_message(embed=embed, view=view)
 
 @client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list")
 async def get_user_waifu_ratings(interaction: discord.Interaction, username: str):
@@ -270,7 +270,6 @@ async def get_server_waifu_ratings(interaction: discord.Interaction):
         }},
          {"$sort": {"average_rating": -1}}
     ]))
-    print(server_ratings)
     if (len(server_ratings) == 0):
         await interaction.response.send_message("This server has no waifu ratings :(")
         return
