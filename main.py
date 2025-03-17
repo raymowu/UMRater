@@ -192,7 +192,7 @@ class View(discord.ui.View):
         ]
     )
     async def select_callback(self, select, interaction):
-        if (rating_db.count_documents({"user_id": select.user.id, "server_id": interaction.guild.id, "mal_id": self.mal_id}) > 0):
+        if (rating_db.count_documents({"user_id": select.user.id, "server_id": select.guild.id, "mal_id": self.mal_id}) > 0):
             rating_db.find_one_and_update({
                 "user_id": select.user.id, 
                 "server_id": select.guild.id,
