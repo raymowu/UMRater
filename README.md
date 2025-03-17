@@ -13,7 +13,7 @@
     <a href="https://discord.com/oauth2/authorize?client_id=1350176544059953293&permissions=8&integration_type=0&scope=bot"><strong>Add to your server! »</strong></a>
     <br />
     <br />
-    <a href="">View Demo</a>
+<!--     <a href="">View Demo</a> -->
     &middot;
     <a href="https://github.com/raymowu/UMRater/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
