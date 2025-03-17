@@ -81,15 +81,15 @@ def get_tier_image_url(tier):
     match tier:
         case 10:
             return 'https://i.imgur.com/ZQG5JHA.png'
-        case 8 | 9:
+        case 9:
             return 'https://i.imgur.com/edc4xFQ.png'
-        case 7:
+        case 8:
             return 'https://i.imgur.com/GqABw1t.png'
-        case 5 | 6:
+        case 6 | 7:
             return 'https://i.imgur.com/hQ54qRQ.png'
-        case 2 | 3 | 4:
+        case 5:
             return 'https://i.imgur.com/s1fFhWV.png'
-        case 1:
+        case 1 | 2 | 3 | 4:
             return 'https://i.imgur.com/UD4mhsm.png'
         case 0:
             return 'https://i.imgur.com/YKZhSks.png'
@@ -98,15 +98,15 @@ def get_tier_color(tier):
     match tier:
         case 10:
             return 0x97dcf7
-        case 8 | 9:
+        case 9:
             return 0xf74044
-        case 7:
+        case 8:
             return 0xf3b755
-        case 5 | 6:
+        case 6 | 7:
             return 0xf3db5e
-        case 2 | 3 | 4:
+        case 5:
             return 0xc8f361
-        case 1:
+        case 1 | 2 | 3 | 4:
             return 0xc9ea7b
         case 0:
             return 0x85877f
@@ -162,22 +162,22 @@ class View(discord.ui.View):
             discord.SelectOption(
                 label="🥇 S Tier",
                 description="These are the ultimate queens. They’re perfect in every way.",
-                value = "8"
+                value = "9"
             ),
             discord.SelectOption(
                 label="🥇 A Tier",
                 description="Exceptional and lovable, just a hair’s breadth from perfection.",
-                value = "7"
+                value = "8"
             ),
             discord.SelectOption(
                 label="🥈 B Tier",
                 description="Strong contenders. Cute, fun, lovable, maybe even a little underrated.",
-                value = "5"
+                value = "6"
             ),
             discord.SelectOption(
                 label="🥉 C Tier",
                 description="They’re… okay. Maybe you see the appeal, maybe not.",
-                value = "4"
+                value = "5"
             ),
             discord.SelectOption(
                 label="🪑 D Tier",
@@ -187,7 +187,7 @@ class View(discord.ui.View):
             discord.SelectOption(
                 label="🗑️ F Tier",
                 description="Nope. Hard pass. Absolutely not waifu material — not even ironically.",
-                value = 0
+                value = "0"
             )
         ]
     )
