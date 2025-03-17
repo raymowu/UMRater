@@ -81,13 +81,13 @@ def get_tier_image_url(tier):
     match tier:
         case 10:
             return 'https://i.imgur.com/ZQG5JHA.png'
-        case 8, 9:
+        case 8 | 9:
             return 'https://i.imgur.com/edc4xFQ.png'
         case 7:
             return 'https://i.imgur.com/GqABw1t.png'
-        case 5, 6:
+        case 5 | 6:
             return 'https://i.imgur.com/hQ54qRQ.png'
-        case 2, 3, 4:
+        case 2 | 3 | 4:
             return 'https://i.imgur.com/s1fFhWV.png'
         case 1:
             return 'https://i.imgur.com/UD4mhsm.png'
@@ -98,13 +98,13 @@ def get_tier_color(tier):
     match tier:
         case 10:
             return 0x97dcf7
-        case 8, 9:
+        case 8 | 9:
             return 0xf74044
         case 7:
             return 0xf3b755
-        case 5, 6:
+        case 5 | 6:
             return 0xf3db5e
-        case 2, 3, 4:
+        case 2 | 3 | 4:
             return 0xc8f361
         case 1:
             return 0xc9ea7b
