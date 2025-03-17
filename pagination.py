@@ -53,7 +53,7 @@ class Pagination(discord.ui.View):
     @discord.ui.button(label="◀", style=discord.ButtonStyle.blurple)
     async def previous(self, interaction: discord.Interaction, button: discord.Button):
         self.index -= 1
-        if self.index == self.tiers_indexes[self.tiers_index - 1]:
+        if self.tiers_index != 0 and self.index == self.tiers_indexes[self.tiers_index - 1]:
             self.tiers_index -= 1
         await self.edit_page(interaction)
 
@@ -64,7 +64,7 @@ class Pagination(discord.ui.View):
     @discord.ui.button(label="▶", style=discord.ButtonStyle.blurple)
     async def next(self, interaction: discord.Interaction, button: discord.Button):
         self.index += 1
-        if self.index == self.tiers_indexes[self.tiers_index + 1]:
+        if self.tiers_index != len(self.tiers_indexes) - 1 and self.index == self.tiers_indexes[self.tiers_index + 1]:
             self.tiers_index += 1
         await self.edit_page(interaction)
 
