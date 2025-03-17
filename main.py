@@ -229,7 +229,7 @@ async def add_waifu_rating(interaction: discord.Interaction, name: str):
 @client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list")
 async def get_user_waifu_ratings(interaction: discord.Interaction, username: str):
     # await interaction.response.defer()
-    user_ratings = list(rating_db.find({"username": username}).sort({"rating": -1}))
+    user_ratings = list(rating_db.find({"username": username}, {"server_id": interaction.guild.id}).sort({"rating": -1}))
     if (len(user_ratings) == 0):
         await interaction.response.send_message("This user has no waifu ratings :(")
         return
