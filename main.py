@@ -18,8 +18,12 @@ database = mongodb_client[db_name]
 rating_db = database['Character Ratings']
 print('Connected to MongoDB database!')
 
-CHARACTERS_URL = "https://api.jikan.moe/v4/characters"
-ANIMES_URL = "https://api.jikan.moe/v4/anime"
+# The public Jikan API (api.jikan.moe) shut down on 2026-10-01. Tenrai serves the
+# same Jikan v4 schema. Set ANIME_API_BASE_URL to use another Jikan-compatible API,
+# e.g. https://jikan.lucashdo.com/v1 (jikan-edge).
+ANIME_API_BASE_URL = os.getenv('ANIME_API_BASE_URL', 'https://api.tenrai.org/v1').rstrip('/')
+CHARACTERS_URL = f"{ANIME_API_BASE_URL}/characters"
+ANIMES_URL = f"{ANIME_API_BASE_URL}/anime"
 REQUEST_TIMEOUT = 10  # seconds
 
 class Client(commands.Bot):
@@ -121,11 +125,12 @@ def get_characters_anime(id):
         print(f'Could not find anime for char id {id}')
 
 def get_character_by_name(name):
+    # No 'limit' param: only the first result is used, and jikan-edge rejects it.
     params = {
-        'limit' : '9',
         'q' : name,
     }
     res = requests.get(CHARACTERS_URL, params=params, timeout=REQUEST_TIMEOUT)
+    res.raise_for_status()
     data = res.json()
     return data['data']
 

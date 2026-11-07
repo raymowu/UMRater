@@ -75,6 +75,7 @@ This repo is set up for Heroku's Python buildpack: `requirements.txt` (dependenc
    - `DISCORD_TOKEN`: your bot token
    - `MONGODB_URI`: your MongoDB connection string. If you use MongoDB Atlas, allow access from `0.0.0.0/0` under Network Access, because Heroku dynos don't have fixed IPs.
    - `DB_NAME`: the database name
+   - `ANIME_API_BASE_URL` (optional): the Jikan-compatible API to fetch character data from. Defaults to Tenrai (`https://api.tenrai.org/v1`); set it to `https://jikan.lucashdo.com/v1` to use jikan-edge instead.
 4. **Deploy** tab → enable **Automatic Deploys** from `main` (optional), or click **Deploy Branch** under Manual deploy.
 5. **Resources** tab → turn **off** the `web` dyno if one is listed and turn **on** the `worker` dyno (`python main.py`).
 6. Check **More → View logs** for `Connected to MongoDB database!` and `Logged on Discord as ...`.
