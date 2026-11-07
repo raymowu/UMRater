@@ -52,13 +52,13 @@ Bring some character wars to your server and let the ultimate rankings be decide
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-/add_character_rating <name>
+`/add_character_rating <name>`
 Shows character stats and information: proceed to give character a rating from the select menu below the panel.
 
-/get_user_character_ratings <username>
+`/get_user_character_ratings <username>`
 Gets character ratings from user that were given on current server.
 
-/get_server_character_ratings
+`/get_server_character_ratings`
 Shows aggregate character rating data for the current server.
 
 
