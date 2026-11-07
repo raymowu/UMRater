@@ -12,7 +12,7 @@
   <p align="center">
     A Discord bot to rate and log your favorite anime characters!
     <br />
-    <a href="https://discord.com/oauth2/authorize?client_id=1350176544059953293&permissions=8&integration_type=0&scope=bot"><strong>Add to your server! »</strong></a>
+    <a href="https://discord.com/oauth2/authorize?client_id=1350176544059953293&permissions=19456&integration_type=0&scope=bot+applications.commands"><strong>Add to your server! »</strong></a>
     <br />
     <br />
 <!--     <a href="">View Demo</a> -->
