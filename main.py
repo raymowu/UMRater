@@ -15,7 +15,7 @@ db_name = os.getenv('DB_NAME')
 
 mongodb_client = MongoClient(mongo_uri)
 database = mongodb_client[db_name]
-rating_db = database['Waifu Ratings']
+rating_db = database['Character Ratings']
 print('Connected to MongoDB database!')
 
 CHARACTERS_URL = "https://api.jikan.moe/v4/characters"
@@ -156,38 +156,38 @@ class View(discord.ui.View):
         options = [
             discord.SelectOption(
                 label="💎 Z Tier",
-                description="These are the waifus that live rent-free in your heart forever. ",
-                value = "10"
+                description="All-time favorites. Characters that stick with you long after the story ends.",
+                value="10"
             ),
             discord.SelectOption(
                 label="🥇 S Tier",
-                description="These are the ultimate queens. They’re perfect in every way.",
-                value = "9"
+                description="Outstanding characters. Excellent writing, design, and development.",
+                value="9"
             ),
             discord.SelectOption(
                 label="🥇 A Tier",
-                description="Exceptional and lovable, just a hair’s breadth from perfection.",
-                value = "8"
+                description="Great characters, just short of the very best.",
+                value="8"
             ),
             discord.SelectOption(
                 label="🥈 B Tier",
-                description="Strong contenders. Cute, fun, lovable, maybe even a little underrated.",
-                value = "6"
+                description="Solid and enjoyable. Well-written, maybe a bit underrated.",
+                value="6"
             ),
             discord.SelectOption(
                 label="🥉 C Tier",
-                description="They’re… okay. Maybe you see the appeal, maybe not.",
-                value = "5"
+                description="Average. Some appeal, but nothing that stands out.",
+                value="5"
             ),
             discord.SelectOption(
                 label="🪑 D Tier",
-                description="These are the waifus that make you squint and ask, “Really?”",
-                value = "1"
+                description="Weak characters. Flat, forgettable, or poorly handled.",
+                value="1"
             ),
             discord.SelectOption(
                 label="🗑️ F Tier",
-                description="Nope. Hard pass. Absolutely not waifu material — not even ironically.",
-                value = "0"
+                description="The worst of the worst. Nothing redeeming about them.",
+                value="0"
             )
         ]
     )
@@ -210,8 +210,8 @@ class View(discord.ui.View):
                 })
             await select.response.send_message("Rating logged!")
 
-@client.tree.command(name="add_waifu_rating", description="Add a rating for a waifu (IF WRONG WAIFU, PUT FULL WAIFU NAME)")
-async def add_waifu_rating(interaction: discord.Interaction, name: str):
+@client.tree.command(name="add_character_rating", description="Add a rating for a character (IF WRONG CHARACTER, PUT FULL CHARACTER NAME)")
+async def add_character_rating(interaction: discord.Interaction, name: str):
     char = get_character_by_name(name)   # first result of search
     if len(char) == 0:
         embed = discord.Embed(title = "No results, please check spelling or put full name")
@@ -226,19 +226,19 @@ async def add_waifu_rating(interaction: discord.Interaction, name: str):
     embed.add_field(name="Kanji", value=character['name_kanji'])
     await interaction.response.send_message(embed=embed, view=view)
 
-@client.tree.command(name="get_user_waifu_ratings", description="Show a user's waifu tier list")
-async def get_user_waifu_ratings(interaction: discord.Interaction, username: str):
+@client.tree.command(name="get_user_character_ratings", description="Show a user's character tier list")
+async def get_user_character_ratings(interaction: discord.Interaction, username: str):
     # await interaction.response.defer()
     user_ratings = list(rating_db.find({"username": username, "server_id": interaction.guild.id}).sort({"rating": -1}))
     if (len(user_ratings) == 0):
-        await interaction.response.send_message("This user has no waifu ratings :(")
+        await interaction.response.send_message("This user has no character ratings :(")
         return
     tiers_indexes = construct_tiers_indexes(user_ratings)
     async def get_page(page: int):
         index = page - 1
         character = get_character_by_id(user_ratings[index]['mal_id'])
         emb = discord.Embed(title=get_characters_anime(character['mal_id']), url = character['url'], color = get_tier_color(user_ratings[index]['rating']))
-        emb.set_author(name=f"{username}'s Waifu Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
+        emb.set_author(name=f"{username}'s Character Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
         emb.set_thumbnail(url=get_tier_image_url(user_ratings[index]['rating']))
         emb.set_image(url=character['images']['jpg']['image_url'])
         emb.add_field(name=character['name'], value=character['name_kanji'])
@@ -248,8 +248,8 @@ async def get_user_waifu_ratings(interaction: discord.Interaction, username: str
     await Pagination(interaction, tiers_indexes, get_page).navegate()
     # await interaction.followup.send("test", ephemeral=True)
 
-@client.tree.command(name="get_server_waifu_ratings", description="Show a server's collective waifu tier list")
-async def get_server_waifu_ratings(interaction: discord.Interaction):
+@client.tree.command(name="get_server_character_ratings", description="Show a server's collective character tier list")
+async def get_server_character_ratings(interaction: discord.Interaction):
     # await interaction.response.defer()
     server_id = interaction.guild.id
     servername = interaction.guild.name
@@ -271,14 +271,14 @@ async def get_server_waifu_ratings(interaction: discord.Interaction):
          {"$sort": {"average_rating": -1}}
     ]))
     if (len(server_ratings) == 0):
-        await interaction.response.send_message("This server has no waifu ratings :(")
+        await interaction.response.send_message("This server has no character ratings :(")
         return
     tiers_indexes = construct_tiers_indexes_server(server_ratings)
     async def get_page(page: int):
         index = page - 1
         character = get_character_by_id(server_ratings[index]['mal_id'])
         emb = discord.Embed(title=get_characters_anime(character['mal_id']), url = character['url'], color = get_tier_color(round(server_ratings[index]['average_rating'])))
-        emb.set_author(name=f"{servername}'s Waifu Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
+        emb.set_author(name=f"{servername}'s Character Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
         emb.set_thumbnail(url=get_tier_image_url(round(server_ratings[index]['average_rating'])))
         emb.set_image(url=character['images']['jpg']['image_url'])
         emb.add_field(name=character['name'], value=character['name_kanji'])
