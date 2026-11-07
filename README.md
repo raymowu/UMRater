@@ -65,6 +65,20 @@ Shows aggregate character rating data for the current server.
 
 
 
+## Deploying to Heroku (GitHub deploys)
+
+This repo is set up for Heroku's Python buildpack: `requirements.txt` (dependencies), `.python-version` (Python 3.13) and a `Procfile` that runs the bot as a `worker` dyno. A Discord bot has no web server, so it can't run as a `web` dyno.
+
+1. In the [Heroku dashboard](https://dashboard.heroku.com/new-app), create a new app.
+2. **Deploy** tab → **Deployment method** → **GitHub**, connect your account, then search for and connect `UMRater`.
+3. **Settings** tab → **Reveal Config Vars**, and add:
+   - `DISCORD_TOKEN`: your bot token
+   - `MONGODB_URI`: your MongoDB connection string. If you use MongoDB Atlas, allow access from `0.0.0.0/0` under Network Access, because Heroku dynos don't have fixed IPs.
+   - `DB_NAME`: the database name
+4. **Deploy** tab → enable **Automatic Deploys** from `main` (optional), or click **Deploy Branch** under Manual deploy.
+5. **Resources** tab → turn **off** the `web` dyno if one is listed and turn **on** the `worker` dyno (`python main.py`).
+6. Check **More → View logs** for `Connected to MongoDB database!` and `Logged on Discord as ...`.
+
 <!-- CONTACT -->
 ## Contact
 
