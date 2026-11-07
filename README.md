@@ -10,7 +10,7 @@
   <h3 align="center">UMRater</h3>
 
   <p align="center">
-    A Discord bot to rate and log your favorite anime waifus!
+    A Discord bot to rate and log your favorite anime characters!
     <br />
     <a href="https://discord.com/oauth2/authorize?client_id=1350176544059953293&permissions=8&integration_type=0&scope=bot"><strong>Add to your server! »</strong></a>
     <br />
@@ -28,16 +28,16 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-UMRater is a fun and community-driven Discord bot that lets users rate their favorite waifus, compare tastes, and see who truly reigns supreme in the server. Whether you're here to simp respectfully or defend your top-tier waifu’s honor, this bot brings some friendly rivalry and anime culture straight to your server.
+UMRater is a fun and community-driven Discord bot that lets users rate their favorite characters, compare tastes, and see who truly reigns supreme in the server. Whether you're here to simp respectfully or defend your top-tier character’s honor, this bot brings some friendly rivalry and anime culture straight to your server.
 
 🌸 Features:</br>
-📝 Rate any waifu from Z to F tier</br>
+📝 Rate any character from Z to F tier</br>
 📊 Server-wide aggregated ratings to see who's universally loved (or divisively controversial)</br>
-🏆 Top-rated waifus</br>
-🔍 Search and view waifu stats</br>
+🏆 Top-rated characters</br>
+🔍 Search and view character stats</br>
 🎉 Perfect for anime-themed servers, community engagement, or just having fun with friends</br>
 
-Bring some waifu wars to your server and let the ultimate rankings be decided—democracy style.
+Bring some character wars to your server and let the ultimate rankings be decided—democracy style.
 
 
 
@@ -52,14 +52,14 @@ Bring some waifu wars to your server and let the ultimate rankings be decided—
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-/add_waifu_rating <name>
-Shows waifu stats and information: proceed to give waifu a rating from the select menu below the panel.
+/add_character_rating <name>
+Shows character stats and information: proceed to give character a rating from the select menu below the panel.
 
-/get_user_waifu_ratings <username>
-Gets waifu ratings from user that were given on current server.
+/get_user_character_ratings <username>
+Gets character ratings from user that were given on current server.
 
-/get_server_waifu_ratings
-Shows aggregate waifu rating data for the current server.
+/get_server_character_ratings
+Shows aggregate character rating data for the current server.
 
 
 
