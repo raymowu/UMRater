@@ -20,6 +20,7 @@ print('Connected to MongoDB database!')
 
 CHARACTERS_URL = "https://api.jikan.moe/v4/characters"
 ANIMES_URL = "https://api.jikan.moe/v4/anime"
+REQUEST_TIMEOUT = 10  # seconds
 
 class Client(commands.Bot):
     async def on_ready(self):
@@ -113,7 +114,7 @@ def get_tier_color(tier):
 
 def get_characters_anime(id):
     try:
-        res = requests.get(f'{CHARACTERS_URL}/{str(id)}/anime')
+        res = requests.get(f'{CHARACTERS_URL}/{str(id)}/anime', timeout=REQUEST_TIMEOUT)
         data = res.json()
         return data['data'][0]['anime']['title']
     except Exception as e:
@@ -124,13 +125,13 @@ def get_character_by_name(name):
         'limit' : '9',
         'q' : name,
     }
-    res = requests.get(CHARACTERS_URL, params=params)
+    res = requests.get(CHARACTERS_URL, params=params, timeout=REQUEST_TIMEOUT)
     data = res.json()
     return data['data']
 
 def get_character_by_id(id):
     try:
-        res = requests.get(f"{CHARACTERS_URL}/{id}/full")
+        res = requests.get(f"{CHARACTERS_URL}/{id}/full", timeout=REQUEST_TIMEOUT)
         data = res.json()
         return data['data']
     except Exception as e:
@@ -143,7 +144,7 @@ def search_anime(name):
         'order_by' : 'favorites',
         'sort' : 'desc'
     }
-    res = requests.get(ANIMES_URL, params=params)
+    res = requests.get(ANIMES_URL, params=params, timeout=REQUEST_TIMEOUT)
     data = res.json()
     return data['data']
 
@@ -212,32 +213,41 @@ class View(discord.ui.View):
 
 @client.tree.command(name="add_character_rating", description="Add a rating for a character (IF WRONG CHARACTER, PUT FULL CHARACTER NAME)")
 async def add_character_rating(interaction: discord.Interaction, name: str):
-    char = get_character_by_name(name)   # first result of search
+    # Discord requires a response within 3 seconds; the Jikan API can be slower,
+    # so acknowledge first and send the real reply as a followup.
+    await interaction.response.defer()
+    try:
+        char = await asyncio.to_thread(get_character_by_name, name)   # first result of search
+    except Exception as e:
+        print(f'Character search failed for "{name}": {e}')
+        await interaction.followup.send("Couldn't reach the anime database right now, please try again in a moment.")
+        return
     if len(char) == 0:
         embed = discord.Embed(title = "No results, please check spelling or put full name")
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
         return
     character = char[0]     # todo: make search feature better
     view = View()
     view.mal_id = character['mal_id']
-    embed = discord.Embed(title = character['name'], url = character['url'], description = character['about'], color = discord.Colour.orange())
+    about = (character['about'] or '')[:4096]   # embed description limit
+    embed = discord.Embed(title = character['name'], url = character['url'], description = about, color = discord.Colour.orange())
     embed.set_thumbnail(url=character['images']['jpg']['image_url'])
-    embed.add_field(name="Anime", value=get_characters_anime(character['mal_id']))
+    embed.add_field(name="Anime", value=await asyncio.to_thread(get_characters_anime, character['mal_id']))
     embed.add_field(name="Kanji", value=character['name_kanji'])
-    await interaction.response.send_message(embed=embed, view=view)
+    await interaction.followup.send(embed=embed, view=view)
 
 @client.tree.command(name="get_user_character_ratings", description="Show a user's character tier list")
 async def get_user_character_ratings(interaction: discord.Interaction, username: str):
-    # await interaction.response.defer()
+    await interaction.response.defer()
     user_ratings = list(rating_db.find({"username": username, "server_id": interaction.guild.id}).sort({"rating": -1}))
     if (len(user_ratings) == 0):
-        await interaction.response.send_message("This user has no character ratings :(")
+        await interaction.followup.send("This user has no character ratings :(")
         return
     tiers_indexes = construct_tiers_indexes(user_ratings)
     async def get_page(page: int):
         index = page - 1
-        character = get_character_by_id(user_ratings[index]['mal_id'])
-        emb = discord.Embed(title=get_characters_anime(character['mal_id']), url = character['url'], color = get_tier_color(user_ratings[index]['rating']))
+        character = await asyncio.to_thread(get_character_by_id, user_ratings[index]['mal_id'])
+        emb = discord.Embed(title=await asyncio.to_thread(get_characters_anime, character['mal_id']), url = character['url'], color = get_tier_color(user_ratings[index]['rating']))
         emb.set_author(name=f"{username}'s Character Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
         emb.set_thumbnail(url=get_tier_image_url(user_ratings[index]['rating']))
         emb.set_image(url=character['images']['jpg']['image_url'])
@@ -250,7 +260,7 @@ async def get_user_character_ratings(interaction: discord.Interaction, username:
 
 @client.tree.command(name="get_server_character_ratings", description="Show a server's collective character tier list")
 async def get_server_character_ratings(interaction: discord.Interaction):
-    # await interaction.response.defer()
+    await interaction.response.defer()
     server_id = interaction.guild.id
     servername = interaction.guild.name
     server_ratings = list(rating_db.aggregate([
@@ -271,13 +281,13 @@ async def get_server_character_ratings(interaction: discord.Interaction):
          {"$sort": {"average_rating": -1}}
     ]))
     if (len(server_ratings) == 0):
-        await interaction.response.send_message("This server has no character ratings :(")
+        await interaction.followup.send("This server has no character ratings :(")
         return
     tiers_indexes = construct_tiers_indexes_server(server_ratings)
     async def get_page(page: int):
         index = page - 1
-        character = get_character_by_id(server_ratings[index]['mal_id'])
-        emb = discord.Embed(title=get_characters_anime(character['mal_id']), url = character['url'], color = get_tier_color(round(server_ratings[index]['average_rating'])))
+        character = await asyncio.to_thread(get_character_by_id, server_ratings[index]['mal_id'])
+        emb = discord.Embed(title=await asyncio.to_thread(get_characters_anime, character['mal_id']), url = character['url'], color = get_tier_color(round(server_ratings[index]['average_rating'])))
         emb.set_author(name=f"{servername}'s Character Tier List", icon_url='https://cdn-1.webcatalog.io/catalog/tiermaker/tiermaker-icon-filled-256.webp?v=1714776171487')
         emb.set_thumbnail(url=get_tier_image_url(round(server_ratings[index]['average_rating'])))
         emb.set_image(url=character['images']['jpg']['image_url'])

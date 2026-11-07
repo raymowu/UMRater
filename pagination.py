@@ -10,6 +10,7 @@ class Pagination(discord.ui.View):
         self.index = 1
         self.tiers_indexes = tiers_indexes
         self.tiers_index = 0
+        self.message: Optional[discord.Message] = None
         super().__init__(timeout=100)
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -23,18 +24,21 @@ class Pagination(discord.ui.View):
             await interaction.response.send_message(embed=emb, ephemeral=True)
             return False
 
+    # The command must have already deferred the interaction.
     async def navegate(self):
         emb, self.total_pages = await self.get_page(self.index)
         if self.total_pages == 1:
-            await self.interaction.response.send_message(embed=emb)
+            await self.interaction.followup.send(embed=emb)
         elif self.total_pages > 1:
             self.update_buttons()
-            await self.interaction.response.send_message(embed=emb, view=self)
+            self.message = await self.interaction.followup.send(embed=emb, view=self, wait=True)
 
     async def edit_page(self, interaction: discord.Interaction):
+        # Acknowledge the button press right away; fetching the page can take over 3 seconds.
+        await interaction.response.defer()
         emb, self.total_pages = await self.get_page(self.index)
         self.update_buttons()
-        await interaction.response.edit_message(embed=emb, view=self)
+        await interaction.edit_original_response(embed=emb, view=self)
 
     def update_buttons(self):
         self.children[0].disabled = self.index == 1
@@ -79,8 +83,8 @@ class Pagination(discord.ui.View):
 
     async def on_timeout(self):
         # remove buttons on timeout
-        message = await self.interaction.original_response()
-        await message.edit(view=None)
+        if self.message is not None:
+            await self.message.edit(view=None)
 
     @staticmethod
     def compute_total_pages(total_results: int, results_per_page: int) -> int:
